@@ -24,24 +24,27 @@ import UIKit
 
 func topAndBottomGradient(size: CGSize, clearLocations: [CGFloat] = [0.35, 0.65], innerIntensity: CGFloat = 0.5) -> UIImage {
   
-  let context = CGBitmapContextCreate(nil, Int(size.width), Int(size.height), 8, 0, CGColorSpaceCreateDeviceGray(), CGImageAlphaInfo.None.rawValue)
+  let context = CGContext(data: nil, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue)
   
   let colors = [
-    UIColor.whiteColor(),
+    UIColor.white,
     UIColor(white: innerIntensity, alpha: 1.0),
-    UIColor.blackColor(),
+    UIColor.black,
     UIColor(white: innerIntensity, alpha: 1.0),
-    UIColor.whiteColor()
-    ].map { $0.CGColor }
+    UIColor.white
+    ].map { $0.cgColor }
+	
   let colorLocations : [CGFloat] = [0, clearLocations[0], (clearLocations[0] + clearLocations[1]) / 2.0, clearLocations[1], 1]
   
-  let gradient = CGGradientCreateWithColors(CGColorSpaceCreateDeviceGray(), colors, colorLocations)
+  let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceGray(), colors: colors as CFArray, locations: colorLocations)
   
   let startPoint = CGPoint(x: 0, y: 0)
   let endPoint = CGPoint(x: 0, y: size.height)
-  CGContextDrawLinearGradient(context, gradient, startPoint, endPoint, CGGradientDrawingOptions())
+	
+	// TODO: There might be better option than force unwrapping here. Kindly revisit this later.
+  context!.drawLinearGradient(gradient!, start: startPoint, end: endPoint, options: CGGradientDrawingOptions())
   
-  let cgImage = CGBitmapContextCreateImage(context)
+  let cgImage = context!.makeImage()
   
-  return UIImage(CGImage: cgImage!)
+  return UIImage(cgImage: cgImage!)
 }
