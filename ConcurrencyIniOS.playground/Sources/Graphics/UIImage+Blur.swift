@@ -30,28 +30,28 @@ extension UIImage {
       print("*** error: invalid size: \(size.width) x \(size.height). Both dimensions must be >= 1: \(self)")
       return nil
     }
-    if self.CGImage == nil {
+    if self.cgImage == nil {
       print("*** error: image must be backed by a CGImage: \(self)")
       return nil
     }
-    if maskImage != nil && maskImage!.CGImage == nil {
+    if maskImage != nil && maskImage!.cgImage == nil {
       print("*** error: maskImage must be backed by a CGImage: \(maskImage)")
       return nil
     }
     
     let __FLT_EPSILON__ = CGFloat(FLT_EPSILON)
-    let screenScale = UIScreen.mainScreen().scale
-    let imageRect = CGRect(origin: CGPointZero, size: size)
+    let screenScale = UIScreen.main.scale
+    let imageRect = CGRect(origin: CGPoint.zero, size: size)
     var effectImage = self
     
     let hasBlur = blurRadius > __FLT_EPSILON__
     
     if hasBlur {
       func createEffectBuffer(context: CGContext) -> vImage_Buffer {
-        let data = CGBitmapContextGetData(context)
-        let width = vImagePixelCount(CGBitmapContextGetWidth(context))
-        let height = vImagePixelCount(CGBitmapContextGetHeight(context))
-        let rowBytes = CGBitmapContextGetBytesPerRow(context)
+        let data = context.data
+        let width = vImagePixelCount(context.width)
+        let height = vImagePixelCount(context.height)
+        let rowBytes = context.bytesPerRow
         
         return vImage_Buffer(data: data, height: height, width: width, rowBytes: rowBytes)
       }
@@ -59,17 +59,18 @@ extension UIImage {
       UIGraphicsBeginImageContextWithOptions(size, false, screenScale)
       let effectInContext = UIGraphicsGetCurrentContext()!
       
-      CGContextScaleCTM(effectInContext, 1.0, -1.0)
-      CGContextTranslateCTM(effectInContext, 0, -size.height)
-      CGContextDrawImage(effectInContext, imageRect, self.CGImage)
+      effectInContext.scaleBy(x: 1.0, y: -1.0)
+      effectInContext.translateBy(x: 0, y: -size.height)
+      effectInContext.draw(self.cgImage!, in: imageRect)
       
-      var effectInBuffer = createEffectBuffer(effectInContext)
+      var effectInBuffer = createEffectBuffer(context: effectInContext)
       
-      
+      // TODO: There might be better option than force unwrapping here. Kindly revisit this later.
+		
       UIGraphicsBeginImageContextWithOptions(size, false, screenScale)
       let effectOutContext = UIGraphicsGetCurrentContext()!
-      
-      var effectOutBuffer = createEffectBuffer(effectOutContext)
+		
+      var effectOutBuffer = createEffectBuffer(context: effectOutContext)
       
       
       if hasBlur {
@@ -99,7 +100,7 @@ extension UIImage {
         vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, nil, 0, 0, radius, radius, nil, imageEdgeExtendFlags)
       }
       
-      effectImage = UIGraphicsGetImageFromCurrentImageContext()
+      effectImage = UIGraphicsGetImageFromCurrentImageContext()!
       
       UIGraphicsEndImageContext()
       UIGraphicsEndImageContext()
@@ -108,24 +109,25 @@ extension UIImage {
     // Set up output context.
     UIGraphicsBeginImageContextWithOptions(size, false, screenScale)
     let outputContext = UIGraphicsGetCurrentContext()
-    CGContextScaleCTM(outputContext, 1.0, -1.0)
-    CGContextTranslateCTM(outputContext, 0, -size.height)
+    outputContext!.scaleBy(x: 1.0, y: -1.0)
+	outputContext!.translateBy(x: 0, y: -size.height)
+	
     
     // Draw base image.
-    CGContextDrawImage(outputContext, imageRect, self.CGImage)
+	outputContext?.draw(self.cgImage!, in: imageRect)
     
     // Draw effect image.
     if hasBlur {
-      CGContextSaveGState(outputContext)
+      outputContext!.saveGState()
       if let image = maskImage {
-        //CGContextClipToMask(outputContext, imageRect, image.CGImage);
-        let effectCGImage = CGImageCreateWithMask(effectImage.CGImage, image.CGImage)
+        let effectCGImage = effectImage.cgImage!.masking(image.cgImage!)
         if let effectCGImage = effectCGImage {
-          effectImage = UIImage(CGImage: effectCGImage)
+          effectImage = UIImage(cgImage: effectCGImage)
         }
       }
-      CGContextDrawImage(outputContext, imageRect, effectImage.CGImage)
-      CGContextRestoreGState(outputContext)
+		
+      outputContext!.draw(effectImage.cgImage!, in: imageRect)
+      outputContext!.restoreGState()
     }
     
     // Output image is ready.
