@@ -12,3 +12,5 @@ Any problems, let me know
 
 —sam
 [@iwantmyrealname](https://twitter.com/iwantmyrealname)
+
+**P.S.:** This repo is currently on migration to Swift 3. The code  explanation on the document might not reflect the new Swift 3 API.
