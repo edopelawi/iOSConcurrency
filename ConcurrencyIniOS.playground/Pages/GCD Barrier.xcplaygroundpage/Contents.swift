@@ -1,9 +1,9 @@
 //: [⬅ GCD Groups](@previous)
 
 import Foundation
-import XCPlayground
+import PlaygroundSupport
 
-XCPlaygroundPage.currentPage.needsIndefiniteExecution = true
+PlaygroundPage.current.needsIndefiniteExecution = true
 
 //: ## GCD Barriers
 //: When you're using asynchronous calls you need to conside thread safety.
@@ -18,24 +18,25 @@ nameChangingPerson.name
 
 //: What happens if you try and use the `changeName(firstName:lastName:)` simulataneously from a concurrent queue?
 
-let workerQueue = dispatch_queue_create("com.raywenderlich.worker", DISPATCH_QUEUE_CONCURRENT)
-let nameChangeGroup = dispatch_group_create()
+let workerQueue = DispatchQueue(label: "com.raywenderlich.worker", attributes: .concurrent)
+let nameChangeGroup = DispatchGroup()
 
 let nameList = [("Charlie", "Cheesecake"), ("Delia", "Dingle"), ("Eva", "Evershed"), ("Freddie", "Frost"), ("Gina", "Gregory")]
 
 for name in nameList {
-  dispatch_group_async(nameChangeGroup, workerQueue) {
-    nameChangingPerson.changeName(firstName: name.0, lastName: name.1)
-    print("Current Name: \(nameChangingPerson.name)")
-  }
+	workerQueue.async(group: nameChangeGroup) {
+		nameChangingPerson.changeName(firstName: name.0, lastName: name.1)
+		print("Current Name: \(nameChangingPerson.name)")
+	}
 }
 
-dispatch_group_notify(nameChangeGroup, dispatch_get_main_queue()) {
-  print("Final name: \(nameChangingPerson.name)")
-  //XCPlaygroundPage.currentPage.finishExecution()
+nameChangeGroup.notify(queue: DispatchQueue.main) {
+	print("Final name: \(nameChangingPerson.name)")
+	//PlaygroundPage.current.finishExecution()
 }
 
-dispatch_group_wait(nameChangeGroup, DISPATCH_TIME_FOREVER)
+// TODO: This was originally a dispatch_time_forever, but Swift 3 (seems to) replaces it with distantFuture. Revisit whether this is a proper replace later.
+nameChangeGroup.wait(timeout: DispatchTime.distantFuture)
 
 //: __Result:__ `nameChangingPerson` has been left in an inconsistent state.
 
@@ -45,19 +46,21 @@ dispatch_group_wait(nameChangeGroup, DISPATCH_TIME_FOREVER)
 
 class ThreadSafePerson: Person {
   
-  let isolationQueue = dispatch_queue_create("com.raywenderlich.person.isolation", DISPATCH_QUEUE_CONCURRENT)
+  let isolationQueue = DispatchQueue(label: "com.raywenderlich.person.isolation", attributes: .concurrent)
   
-  override func changeName(firstName firstName: String, lastName: String) {
-    dispatch_barrier_async(isolationQueue) { 
-      super.changeName(firstName: firstName, lastName: lastName)
-    }
+  override func changeName(firstName: String, lastName: String) {
+	
+	isolationQueue.async(flags: .barrier) {
+		super.changeName(firstName: firstName, lastName: lastName)
+	}
   }
   
   override var name: String {
     var result = ""
-    dispatch_sync(isolationQueue) { 
-      result = super.name
-    }
+	isolationQueue.sync {
+		result = super.name
+	}
+	
     return result
   }
 }
@@ -65,20 +68,20 @@ class ThreadSafePerson: Person {
 
 print("\n=== Threadsafe ===")
 
-let threadSafeNameGroup = dispatch_group_create()
+let threadSafeNameGroup = DispatchGroup()
 
 let threadSafePerson = ThreadSafePerson(firstName: "Anna", lastName: "Adams")
 
 for name in nameList {
-  dispatch_group_async(threadSafeNameGroup, workerQueue) {
-    threadSafePerson.changeName(firstName: name.0, lastName: name.1)
-    print("Current threadsafe name: \(threadSafePerson.name)")
-  }
+	workerQueue.async(group: threadSafeNameGroup) {
+		threadSafePerson.changeName(firstName: name.0, lastName: name.1)
+		print("Current threadsafe name: \(threadSafePerson.name)")
+	}
 }
 
-dispatch_group_notify(threadSafeNameGroup, dispatch_get_main_queue()) {
-  print("Final threadsafe name: \(threadSafePerson.name)")
-  XCPlaygroundPage.currentPage.finishExecution()
+threadSafeNameGroup.notify(queue: DispatchQueue.main) {
+	print("Final threadsafe name: \(threadSafePerson.name)")
+	PlaygroundPage.current.finishExecution()
 }
 
 /*:
