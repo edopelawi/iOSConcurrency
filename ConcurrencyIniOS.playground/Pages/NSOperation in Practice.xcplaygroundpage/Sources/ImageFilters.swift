@@ -24,23 +24,22 @@
 import UIKit
 
 
-public class TiltShiftOperation: NSOperation {
+public class TiltShiftOperation: Operation {
   public var inputImage: UIImage?
   public var outputImage: UIImage?
   
   public override func main() {
     if let dependencyImageProvider = dependencies
       .filter({ $0 is FilterDataProvider })
-      .first as? FilterDataProvider
-      where inputImage == .None {
+      .first as? FilterDataProvider, inputImage == .none {
       inputImage = dependencyImageProvider.outputImage
     }
     
-    outputImage = tiltShift(inputImage)
+    outputImage = tiltShift(image: inputImage)
   }
 }
 
-public class ImageOutputOperation: NSOperation {
+public class ImageOutputOperation: Operation {
   public var inputImage: UIImage?
   public var completion: ((UIImage?) -> ())?
   
@@ -48,8 +47,7 @@ public class ImageOutputOperation: NSOperation {
     guard let completion = completion else { return }
     if let dependencyImageProvider = dependencies
       .filter({ $0 is FilterDataProvider })
-      .first as? FilterDataProvider
-      where inputImage == .None {
+      .first as? FilterDataProvider, inputImage == .none {
       inputImage = dependencyImageProvider.outputImage
     }
 

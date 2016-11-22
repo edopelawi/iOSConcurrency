@@ -30,12 +30,12 @@ public class ImageCell: UITableViewCell {
   }
   
   public func transitionToImage(image: UIImage?) {
-    NSOperationQueue.mainQueue().addOperationWithBlock {
+    OperationQueue.main.addOperation {
       if image == nil {
         self.fullImageView?.alpha = 0
       } else {
         self.fullImageView?.image = image
-        UIView.animateWithDuration(0.4, animations: {
+        UIView.animate(withDuration: 0.4, animations: {
           self.fullImageView?.alpha = 1
         })
       }
@@ -61,15 +61,15 @@ public class ImageCell: UITableViewCell {
     guard let fullImageView = fullImageView else { return }
     addSubview(fullImageView)
     
-    fullImageView.contentMode = .ScaleAspectFill
+    fullImageView.contentMode = .scaleAspectFill
     fullImageView.translatesAutoresizingMaskIntoConstraints = false
     fullImageView.clipsToBounds = true
     
-    NSLayoutConstraint.activateConstraints([
-      fullImageView.bottomAnchor.constraintEqualToAnchor(bottomAnchor),
-      fullImageView.topAnchor.constraintEqualToAnchor(topAnchor),
-      fullImageView.leadingAnchor.constraintEqualToAnchor(leadingAnchor),
-      fullImageView.trailingAnchor.constraintEqualToAnchor(trailingAnchor)
+    NSLayoutConstraint.activate([
+      fullImageView.bottomAnchor.constraint(equalTo: bottomAnchor),
+      fullImageView.topAnchor.constraint(equalTo: topAnchor),
+      fullImageView.leadingAnchor.constraint(equalTo: leadingAnchor),
+      fullImageView.trailingAnchor.constraint(equalTo: trailingAnchor)
     ])
     
   }

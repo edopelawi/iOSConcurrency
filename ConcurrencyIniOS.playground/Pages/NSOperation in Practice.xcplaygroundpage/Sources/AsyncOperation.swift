@@ -22,23 +22,24 @@
 
 import Foundation
 
-public class AsyncOperation: NSOperation {
-  public enum State: String {
-    case Ready, Executing, Finished
+public class AsyncOperation: Operation {
+	
+	public enum State: String {
+    case ready, executing, finished
     
-    private var keyPath: String {
+    fileprivate var keyPath: String {
       return "is" + rawValue
     }
   }
   
-  public var state = State.Ready {
+  public var state = State.ready {
     willSet {
-      willChangeValueForKey(newValue.keyPath)
-      willChangeValueForKey(state.keyPath)
+      willChangeValue(forKey: newValue.keyPath)
+      willChangeValue(forKey: state.keyPath)
     }
     didSet {
-      didChangeValueForKey(oldValue.keyPath)
-      didChangeValueForKey(state.keyPath)
+      didChangeValue(forKey: oldValue.keyPath)
+      didChangeValue(forKey: state.keyPath)
     }
   }
 }
@@ -46,40 +47,40 @@ public class AsyncOperation: NSOperation {
 
 extension AsyncOperation {
   // NSOperation Overrides
-  override public var ready: Bool {
-    return super.ready && state == .Ready
+  override public var isReady: Bool {
+    return super.isReady && state == .ready
   }
   
-  override public var executing: Bool {
-    return state == .Executing
+  override public var isExecuting: Bool {
+    return state == .executing
   }
   
-  override public var finished: Bool {
-    return state == .Finished
+  override public var isFinished: Bool {
+    return state == .finished
   }
   
-  override public var asynchronous: Bool {
+  override public var isAsynchronous: Bool {
     return true
   }
   
   override public func start() {
-    if cancelled {
-      state = .Finished
+    if isCancelled {
+      state = .finished
       return
     }
     
     main()
-    state = .Executing
+    state = .executing
   }
   
   public override func cancel() {
-    state = .Finished
+    state = .finished
   }
 }
 
-
+// TODO: Revisit how to update this operator declaration later.
 infix operator |> { associativity left precedence 150 }
-public func |>(lhs: NSOperation, rhs: NSOperation) -> NSOperation {
+public func |>(lhs: Operation, rhs: Operation) -> Operation {
   rhs.addDependency(lhs)
   return rhs
 }
