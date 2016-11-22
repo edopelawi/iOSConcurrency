@@ -24,23 +24,24 @@ import UIKit
 /*:
  The subclass adds a `state` property, and ensures that the appropriate KVO notifications are sent when the value is updated. This is integral to how `NSOperationQueue` manages its operations
  */
-class AsyncOperation: NSOperation {
+class AsyncOperation: Operation {
+	
   enum State: String {
-    case Ready, Executing, Finished
+    case ready, executing, finished
     
-    private var keyPath: String {
+    fileprivate var keyPath: String {
       return "is" + rawValue
     }
   }
   
-  var state = State.Ready {
+  var state = State.ready {
     willSet {
-      willChangeValueForKey(newValue.keyPath)
-      willChangeValueForKey(state.keyPath)
+      willChangeValue(forKey: newValue.keyPath)
+      willChangeValue(forKey: state.keyPath)
     }
     didSet {
-      didChangeValueForKey(oldValue.keyPath)
-      didChangeValueForKey(state.keyPath)
+      didChangeValue(forKey: oldValue.keyPath)
+      didChangeValue(forKey: state.keyPath)
     }
   }
 }
@@ -54,33 +55,33 @@ class AsyncOperation: NSOperation {
  */
 extension AsyncOperation {
   // NSOperation Overrides
-  override var ready: Bool {
-    return super.ready && state == .Ready
+  override var isReady: Bool {
+    return super.isReady && state == .ready
   }
   
-  override var executing: Bool {
-    return state == .Executing
+  override var isExecuting: Bool {
+    return state == .executing
   }
   
-  override var finished: Bool {
-    return state == .Finished
+  override var isFinished: Bool {
+    return state == .finished
   }
   
-  override var asynchronous: Bool {
+  override var isAsynchronous: Bool {
     return true
   }
   
   override func start() {
-    if cancelled {
-      state = .Finished
+    if isCancelled {
+      state = .finished
       return
     }
     main()
-    state = .Executing
+    state = .executing
   }
   
   override func cancel() {
-    state = .Finished
+    state = .finished
   }
 }
 
@@ -94,16 +95,16 @@ class ImageLoadOperation: AsyncOperation {
   
   override func main() {
     duration {
-      simulateNetworkImageLoadAsync(self.inputName, callback: { (image) in
+      simulateNetworkImageLoadAsync(named: self.inputName, callback: { (image) in
         self.outputImage = image
-        self.state = .Finished
+        self.state = .finished
       })
     }
   }
 }
 
 //: This operation can then be used in the same way as any other `NSOperation`:
-let queue = NSOperationQueue()
+let queue = OperationQueue()
 
 let imageLoad = ImageLoadOperation()
 imageLoad.inputName = "train_dusk.jpg"
