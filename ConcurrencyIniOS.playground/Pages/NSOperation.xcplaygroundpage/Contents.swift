@@ -29,15 +29,15 @@ import UIKit
 
 let image = UIImage(named: "dark_road_small.jpg")
 duration { 
-  let result = tiltShift(image)
+  let result = tiltShift(image: image)
 }
 
 var outputImage: UIImage?
 
 //: You can use the `NSBlockOperation` subclass of `NSOperation` to easily wrap some functionality.
 
-let myFirstOperation = NSBlockOperation { 
-  outputImage = tiltShift(image)
+let myFirstOperation = BlockOperation { 
+  outputImage = tiltShift(image: image)
 }
 
 //: You can then execute this operation with the `start()` method:
@@ -52,12 +52,12 @@ outputImage
  
  When subclassing, create properties for input and output objects, and then override the `main()` method to perform the work.
  */
-class TiltShiftOperation: NSOperation {
+class TiltShiftOperation: Operation {
   var inputImage: UIImage?
   var outputImage: UIImage?
   
   override func main() {
-    outputImage = tiltShift(inputImage)
+	outputImage = tiltShift(image: inputImage)
   }
 }
 
