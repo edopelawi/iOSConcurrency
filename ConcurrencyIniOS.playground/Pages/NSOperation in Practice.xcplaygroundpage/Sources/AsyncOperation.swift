@@ -79,7 +79,12 @@ extension AsyncOperation {
 }
 
 // TODO: Revisit how to update this operator declaration later.
-infix operator |> { associativity left precedence 150 }
+infix operator |> : Dependent
+
+precedencegroup Dependent {
+	associativity: left
+}
+
 public func |>(lhs: Operation, rhs: Operation) -> Operation {
   rhs.addDependency(lhs)
   return rhs
