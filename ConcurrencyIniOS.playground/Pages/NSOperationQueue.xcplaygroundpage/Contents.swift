@@ -17,18 +17,18 @@ let imageNames = ["dark_road_small", "train_day", "train_dusk", "train_night"]
 let images = imageNames.flatMap { UIImage(named: "\($0).jpg") }
 images
 
-class TiltShiftOperation: NSOperation {
+class TiltShiftOperation: Operation {
   var inputImage: UIImage?
   var outputImage: UIImage?
 
   override func main() {
-    outputImage = tiltShift(inputImage)
+	outputImage = tiltShift(image: inputImage)
   }
 }
 
 
 //: Creating a queue is simple - using the default constructor:
-let queue = NSOperationQueue()
+let queue = OperationQueue()
 
 var operations = [TiltShiftOperation]()
 
