@@ -34,7 +34,7 @@ class ImageLoadOperation: AsyncOperation {
   override func main() {
     simulateNetworkImageLoadAsync(self.inputName, callback: { (image) in
       self.outputImage = image
-      self.state = .Finished
+      self.state = .finished
     })
   }
 }
@@ -47,8 +47,7 @@ class TiltShiftOperation: NSOperation {
   override func main() {
     if let dependencyImageProvider = dependencies
     .filter({ $0 is FilterDataProvider})
-    .first as? FilterDataProvider
-      where inputImage == .None {
+    .first as? FilterDataProvider, inputImage == .none {
       inputImage = dependencyImageProvider.outputImage
     }
     outputImage = tiltShift(inputImage)
