@@ -32,7 +32,7 @@ class ImageLoadOperation: AsyncOperation {
   var outputImage: UIImage?
   
   override func main() {
-    simulateNetworkImageLoadAsync(self.inputName, callback: { (image) in
+	simulateNetworkImageLoadAsync(named: self.inputName, callback: { (image) in
       self.outputImage = image
       self.state = .finished
     })
@@ -40,7 +40,7 @@ class ImageLoadOperation: AsyncOperation {
 }
 
 //: The same filtering operation you saw before. The `main()` method now attempts to find an input image in its dependencies if the `inputImage` property hasn't already been set.
-class TiltShiftOperation: NSOperation {
+class TiltShiftOperation: Operation {
   var inputImage: UIImage?
   var outputImage: UIImage?
   
@@ -50,7 +50,7 @@ class TiltShiftOperation: NSOperation {
     .first as? FilterDataProvider, inputImage == .none {
       inputImage = dependencyImageProvider.outputImage
     }
-    outputImage = tiltShift(inputImage)
+    outputImage = tiltShift(image: inputImage)
   }
 }
 
@@ -71,11 +71,17 @@ extension ImageLoadOperation: FilterDataProvider {
  - important:
  Heed all the usual warnings about custom operators. This is a situation where they can offer genuine clarity, but that isn't often the case.
  */
-infix operator |> { associativity left precedence 150 }
-func |>(lhs: NSOperation, rhs: NSOperation) -> NSOperation {
-  rhs.addDependency(lhs)
-  return rhs
+infix operator |> : Dependent
+
+precedencegroup Dependent {
+	associativity: left
 }
+
+public func |>(lhs: Operation, rhs: Operation) -> Operation {
+	rhs.addDependency(lhs)
+	return rhs
+}
+
 
 
 //: Create the relevant operations
@@ -89,7 +95,7 @@ imageLoad.inputName = "train_day.jpg"
 imageLoad |> filter
 
 //: Add both operations to the operation queue
-let queue = NSOperationQueue()
+let queue = OperationQueue()
 duration {
   queue.addOperations([imageLoad, filter], waitUntilFinished: true)
 }

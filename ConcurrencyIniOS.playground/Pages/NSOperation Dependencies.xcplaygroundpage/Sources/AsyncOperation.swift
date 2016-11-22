@@ -23,7 +23,7 @@
 
 import Foundation
 
-public class AsyncOperation: Operation {
+open class AsyncOperation: Operation {
   public enum State: String {
     case ready, executing, finished
     
@@ -47,23 +47,23 @@ public class AsyncOperation: Operation {
 
 extension AsyncOperation {
   // NSOperation Overrides
-  override public var isReady: Bool {
+  override open var isReady: Bool {
     return super.isReady && state == .ready
   }
   
-  override public var isExecuting: Bool {
+  override open var isExecuting: Bool {
     return state == .executing
   }
   
-  override public var isFinished: Bool {
+  override open var isFinished: Bool {
     return state == .finished
   }
   
-  override public var isAsynchronous: Bool {
+  override open var isAsynchronous: Bool {
     return true
   }
   
-  override public func start() {
+  override open func start() {
     if isCancelled {
       state = .finished
       return
@@ -73,7 +73,7 @@ extension AsyncOperation {
     state = .executing
   }
   
-  public override func cancel() {
+  open override func cancel() {
     state = .finished
   }
 }
