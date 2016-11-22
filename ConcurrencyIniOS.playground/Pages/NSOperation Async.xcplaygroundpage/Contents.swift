@@ -30,7 +30,7 @@ class AsyncOperation: Operation {
     case ready, executing, finished
     
     fileprivate var keyPath: String {
-      return "is" + rawValue
+      return "is" + rawValue.capitalized
     }
   }
   
